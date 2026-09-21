@@ -16,6 +16,7 @@
     --ink: #414753;                       /* 414753 · 100% — текст, тёмные плашки */
     --ink-50: rgba(65, 71, 83, .5);       /* заголовки разделов */
     --ink-40: rgba(65, 71, 83, .4);       /* второстепенный текст, ховер-рамка */
+    --ink-30: rgba(65, 71, 83, .3);       /* подпись на серой плашке «скоро кейс» */
     --ink-20: rgba(65, 71, 83, .2);       /* неактивные точки, разделитель */
     --ink-10: rgba(65, 71, 83, .1);       /* рамки кнопок */
     --bg: #ffffff;                        /* FFFFFF · 100% */
@@ -94,7 +95,7 @@
     --gutter: max(var(--side), calc((100% - var(--col)) / 2));
     flex: 1; min-width: 0;
     display: flex; align-items: flex-start; gap: 12px;
-    padding-inline: var(--gutter);
+    padding-inline: var(--gutter) var(--side);
     overflow-x: auto; overscroll-behavior-x: contain;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
     user-select: none; cursor: grab;
@@ -125,6 +126,7 @@
   }
   .card:hover img { transform: scale(1.04); }                          /* при наведении на карточку растёт только картинка */
   .card__title { position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 20px; font-weight: 500; }
+  .card__title .ln { display: block; }
   .card__go {                                                          /* кнопка-стрелка: ×2 при наведении на карточку */
     position: absolute; z-index: 2; top: 20px; right: 20px;
     width: 32px; height: 32px; display: grid; place-items: center;
@@ -132,6 +134,15 @@
     transform-origin: 100% 0; transition: transform .25s cubic-bezier(.2, .7, .2, 1);
   }
   .card:hover .card__go, .card:focus-visible .card__go { transform: scale(2); }
+
+  /* серая плашка «скоро тут появится новый кейс» — без ховера и действий, уже карточки */
+  .soon {
+    flex: 0 0 231px; width: 231px; height: 450px; padding-top: 9px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: var(--panel); color: var(--ink-30); text-align: center; font-weight: 500;
+  }
+  .soon__plus { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; background: var(--ink-10); color: var(--panel); }
+  .soon p { margin: 0; max-width: 170px; }
 
   /* ───────── Страница кейса ───────── */
   #case { padding: 100px 0 96px; }
@@ -250,18 +261,20 @@
   .missing { margin: 48px 0 0; font: 500 24px/1.2 var(--font); }
 
   /* ───────── Подвал ───────── */
-  .foot { padding: 0 var(--side) 24px; text-align: center; color: var(--ink-40); font-size: 12px; }
+  .foot { padding: 0 var(--side) 22px; text-align: center; color: var(--ink-40); font-size: 12px; }
 
   /* ───────── Мобильная версия ───────── */
   @media (max-width: 640px) {
     .pill--hh { width: 32px; padding: 0; }
     .pill--hh .lbl { display: none; }
 
-    #home { align-items: flex-start; padding-block: 100px 96px; }
+    #home { align-items: flex-start; padding-block: 100px; }
     .rail { flex-direction: column; align-items: stretch; gap: 12px; overflow: visible; cursor: auto; user-select: auto; }
     .intro { flex: none; width: auto; margin: 0 0 10px; }
     .intro img { height: auto; aspect-ratio: 354 / 350; }
     .card { flex: none; width: auto; height: auto; aspect-ratio: 354 / 350; }
+    .card img { object-position: 50% 0; }                                /* обложка 700×900 в кадре 354×350 — от верха, как в макете */
+    .soon { flex: none; width: auto; height: 200px; gap: 14px; }
 
     .hero { aspect-ratio: 354 / 350; }
     .cards, .stats { grid-template-columns: 1fr; }
@@ -314,8 +327,9 @@
 const SITE = {
   name:    'Михаил Сальков',
   intro:   'Добро пожаловать! Меня зовут Михаил, я специалист по AI-автоматизации с опытом более 8-ми лет в продуктовом дизайне',
-  resume:  'https://hh.ru/',                 // ← ссылка на резюме
+  resume:  'https://drive.google.com/file/d/1J5dM7pwmTNrciYsIWsoxMNE4NX0itflU/view?usp=sharing',   // ← кнопка «Резюме на hh»
   contact: 'https://t.me/ma_salkov',         // ← кнопка «Связаться»
+  soon:    'Скоро тут появится новый кейс',  // ← серая плашка в конце карусели; пустая строка — плашки не будет
   legal:   'ИП Сальков Михаил Александрович, ИНН: 772916478709',
   portrait:'img/portrait.jpg'
 };
@@ -324,6 +338,7 @@ const SITE = {
    Кейсы. Порядок в массиве = порядок в карусели и в кнопках «предыдущий / следующий».
    Страница кейса собирается по шаблону из макета:
      slug, title, cover, tint   — адрес, название и обложка карточки (если обложки нет — цвет tint)
+     lines [строки]?            — название на карточке с заданными переносами строк (иначе переносится само)
      shade {h, rgb, a}?         — затемнение под названием на карточке (по умолчанию чёрный 0→62% на 102px)
      hero   {d, m?, alt}        — большая картинка 2:1 (m — вариант для мобильной версии)
      lead                       — крупный вводный абзац
@@ -338,41 +353,11 @@ const SITE = {
      quote  {text, name, role, avatar | initials}  — отзыв (раздел «Результат»); initials — буквы в цветном круге вместо фото
      stats  [{n, text, src}, …]         — три карточки с цифрами
    ──────────────────────────────────────────────────────────────── */
-const S1 = 'Lorem ipsum dolor sit amet consectetur. Nullam vulputate orci bibendum aliquet commodo tellus viverra mi. Condimentum dignissim et quis sed dictumst sit purus eu. Risus iaculis pulvinar nullam risus nibh id at neque tempor. Ante adipiscing velit tempor tortor enim auctor purus.';
-const L1 = S1 + ' ' + S1 + S1;
-const EMPTY5 = () => [{}, {}, {}, {}, {}];
-
-/* Шаблон для кейсов, которые ещё не наполнены (тексты-заглушки из макета) */
-const template = (o) => Object.assign({
-  lead: 'Lorem ipsum dolor sit amet consectetur. Nullam vulputate orci bibendum aliquet commodo tellus viverra mi. Condimentum dignissim et quis sed dictumst sit purus eu. Risus iaculis pulvinar nullam risus nibh id at neque tempor.',
-  hero: { d: o.cover, alt: '' },
-  meta: [['Категория', 'B2B / SAAS'], ['Тип', 'Таск-трекер'], ['Платформа', 'Web'], ['Период', '2025']],
-  cards: [
-    { label: 'Задача',   text: 'Lorem ipsum dolor sit amet consectetur. Tincidunt volutpat porta neque a a. Blandit commodo in egestas ut amet in sed quam. Et ultricies luctus integer lacus eget. Felis habitasse massa varius magna suspendisse.' },
-    { label: 'Моя роль', text: 'Lorem ipsum dolor sit amet consectetur. Cras adipiscing ullamcorper sit sit sed eu. Ultricies eu id lacinia tincidunt. Pulvinar a duis id etiam praesent et justo lacinia. Molestie lacus cursus cursus sem.' },
-    { label: 'Результат', dark: true, text: 'Lorem ipsum dolor sit amet consectetur. Tincidunt ut donec condimentum ut. Etiam donec dis gravida fermentum nunc mauris felis id a. Eget venenatis lacus mattis neque pharetra. Tincidunt non massa in eu at amet.' }
-  ],
-  sections: [
-    { title: 'Задача', paras: [L1] },
-    { title: 'Процесс реализации', paras: [L1], slides: EMPTY5() },
-    { title: 'Сложности', paras: [L1] },
-    { title: 'Решение', paras: [L1, L1], slides: EMPTY5() }
-  ],
-  quote: {
-    text: 'Михаил делал для нашего проекта редизайн Telegram-миниапа, админ-панели и других продуктов. Я доволен не только результатом, но и скоростью работы. Особенно важно, что каждое своё решение Михаил мог обосновать и объяснить с точки зрения актуальных трендов в UX/UI-дизайне. Я очень доволен сотрудничеством и могу рекомендовать Михаила для разных задач, связанных с дизайном интерфейсов, мобильных приложений и не только.',
-    name: 'Николай Дворянкин', role: 'Founder Teleforce', avatar: 'img/t-author.jpg'
-  },
-  stats: [
-    { n: '1', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'Внутренний тайм-трекинг проекта' },
-    { n: '1', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'Фидбек команды Teleforce' },
-    { n: '5', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'UX-структура проекта' }
-  ]
-}, o);
-
 const CASES = [
   {
     slug: 'ai-administrator',
     title: 'AI-администратор, который круглосуточно консультирует клиентов по услугам салона и помогает перейти к онлайн-записи',
+    lines: ['AI-администратор, который', 'круглосуточно консультирует', 'клиентов по услугам салона', 'и помогает перейти к онлайн-записи'],   // переносы строк в карточке — как в макете
     cover: 'img/cover-ai.jpg', tint: '#f2400a', shade: { h: 190, rgb: '30, 30, 30', a: 1 },   // длинное название — затемнение выше и плотнее, как в макете обложки
     hero: { d: 'img/hero-ai.jpg', alt: 'Telegram-бот салона: консультация по стоимости маникюра' },
     lead: 'AI-администратор, который круглосуточно консультирует клиентов по услугам салона и помогает перейти к онлайн-записи',
@@ -433,85 +418,7 @@ const CASES = [
       { n: '9,0', text: 'NPS удовлетворённости клиентов AI-ассистентом', src: 'По данным опроса 25 клиентов' },
       { n: '-50%', text: 'Снижение нагрузки на администраторов', src: 'По оценке сотрудников' }
     ]
-  },
-  {
-    slug: 'teleforce', title: 'Teleforce', cover: 'img/cover-teleforce.jpg', tint: '#7a7468',
-    hero: { d: 'img/hero-teleforce.jpg', m: 'img/hero-teleforce-m.jpg', alt: 'Телефон с приложением Teleforce на бетонной поверхности' },
-    lead: 'Telegram – удобный мессенджер, но в нем сложно управлять командой. Teleforce добавляет недостающие функции: управление задачами, корпоративные папки, AI-поиск, рассылки и контроль доступа – без сложных интеграций и новых приложений.',
-    meta: [['Категория', 'B2B / SaaS'], ['Тип', 'Mini app'], ['Платформа', 'Mobile'], ['Стадия', 'Запуск'], ['Период', '2025']],
-    cards: [
-      { label: 'Задача', text: 'Редизайн Mini App, улучшение ключевых сценариев, снижение оттока аудитории и проектирование новых функций для роста LTV.' },
-      { label: 'Моя роль', text: 'Полный цикл UX/UI: исследования, интервью, новые функции, развитие дизайн-системы, передача в разработку и сопровождение.' },
-      { label: 'Результат', dark: true, text: 'Переработал пользовательский опыт продукта, обновил ключевые сценарии и спроектировал новые функции, что позволило повысить вовлеченность аудитории, LTV и ценность сервиса в целом.' }
-    ],
-    sections: [
-      { title: 'Задача',
-        paras: ['Провести редизайн существующего Mini App, повысить удобство ключевых пользовательских сценариев, устранить точки повышающие отток аудитории и спроектировать новые функции на основе обратной связи пользователей для увеличения LTV и ценности продукта.'] },
-      { title: 'Моя роль',
-        paras: ['Отвечал за полный цикл UX/UI-проектирования — от исследований, интервью с пользователями и анализа конкурентов до проектирования новых функций, развития дизайн-системы, передачи макетов в разработку и сопровождения реализации продукта.'] },
-      { title: 'Процесс реализации',
-        paras: ['Выстроил дизайн-процесс на основе исследований пользователей и анализа их поведения — от выявления причин оттока и формулирования гипотез до проектирования новых функций, редизайна интерфейсов и сопровождения реализации совместно с командой разработки.'],
-        stages: [
-          { name: 'Дискавери и ресерч', time: '2 нед', tags: 'Бриф, анализ продукта, интервью, гипотезы, конкурентный анализ' },
-          { name: 'UX-дизайн', time: '1 нед', tags: 'User Flow, сценарии, архитектура, UX-логика, приоритизация' },
-          { name: 'UI-дизайн', time: '3 нед', tags: 'Вайрфреймы, концепт, UI-кит, редизайн, новые функции' },
-          { name: 'Передача в разработку', time: '2 нед', tags: 'Ревью, обратная связь, итерационные улучшения, контроль реализации' }
-        ],
-        slides: [
-          { src: 'img/ph-1.jpg', alt: 'Телефон с приложением Teleforce в руке' },
-          { src: 'img/ph-2.jpg', alt: 'Рука с телефоном у перил' },
-          { src: 'img/ph-3.jpg', alt: 'Карточка пользователя с конфетти на экране телефона' },
-          { src: 'img/ph-4.jpg', alt: 'Телефон на бетонных ступенях' },
-          { src: 'img/ph-5.jpg', alt: 'База знаний на экране телефона' }
-        ] },
-      { title: 'Сложности',
-        paras: ['Основной сложностью было определить реальные причины оттока пользователей и улучшить продукт таким образом, чтобы повысить удержание аудитории без усложнения ключевых сценариев.'] },
-      { title: 'Решение',
-        paras: ['Выявил наиболее частые барьеры в использовании продукта, спроектировал новые функции и переработал уже существующие сценарии, повысив ценность сервиса для пользователей.'] },
-      { title: 'Редизайн старых фичей',
-        paras: ['Переработал ключевые пользовательские сценарии и существующие разделы продукта, повысив понятность интерфейсов, скорость выполнения задач и удобство ежедневного использования сервиса.'],
-        slides: [
-          { src: 'img/sl-states.jpg', alt: 'Экраны состояний: было и стало', contain: true },
-          { src: 'img/sl-subscription.jpg', alt: 'Экран подписки: было и стало', contain: true },
-          { src: 'img/sl-streams.jpg', alt: 'Раздел «Потоки»: было и стало', contain: true },
-          { src: 'img/sl-hub.jpg', alt: 'Раздел «База знаний» (теперь «Хаб»): было и стало', contain: true },
-          { src: 'img/sl-people.jpg', alt: 'Раздел «Участники» (теперь «Люди» со встроенным тиндером): было и стало', contain: true }
-        ] },
-      { title: 'Дизайн новых фичей',
-        paras: ['Спроектировал новые функциональные возможности на основе пользовательской обратной связи и продуктовых гипотез, расширив ценность сервиса и усилив вовлеченность аудитории.',
-                'И еще десятки других экранов. Чтобы показать все — пришлось бы растянуть слайд с дизайном на километры :)'],
-        slides: [
-          { src: 'img/sl-onboarding.jpg', alt: 'Онбординг после регистрации', contain: true },
-          { src: 'img/sl-search.jpg', alt: 'Умный поиск и саммари', contain: true },
-          { src: 'img/sl-profiles.jpg', alt: 'Мой профиль и профиль пользователя', contain: true }
-        ] },
-      { title: 'Применение ИИ',
-        paras: ['Использовал ИИ для генерации контента, структурирования требований, поиска решений и прототипирования, что помогло ускорить процесс проектирования и сократить время на рутинные задачи.'],
-        tags: 'ChatGPT · Claude · Cursor' },
-      { title: 'Исследования',
-        paras: ['Проводил исследования на протяжении всего проекта — анализировал причины оттока, изучал обратную связь, проводил интервью и проверял продуктовые гипотезы, чтобы определить направления развития и повысить LTV.'],
-        tags: 'CustDev · JTBD · Product Discovery' },
-      { title: 'Работа в Figma',
-        paras: ['Развивал дизайн-систему продукта, используя компоненты, варианты и Auto Layout, что обеспечило консистентность интерфейсов, удобство масштабирования продукта и эффективное взаимодействие с разработкой.'],
-        tags: 'Variables · Components · Auto Layout' },
-      { title: 'UI',
-        paras: ['Сформировал визуальную UI-систему с современной типографикой, цветовой палитрой и консистентным набором иконок, обеспечив читаемость интерфейса и целостное восприятие продукта.'],
-        tags: 'Шрифт: Inter',
-        swatches: [['#1DA0FF', ''], ['#000000', ''], ['#848484', ''], ['#D3EAFF', 'sw--light'], ['#F5F7F9', 'sw--light sw--line']] }
-    ],
-    quote: {
-      text: 'Михаил делал для нашего проекта редизайн Telegram-миниапа, админ-панели и других продуктов. Я доволен не только результатом, но и скоростью работы. Особенно важно, что каждое своё решение Михаил мог обосновать и объяснить с точки зрения актуальных трендов в UX/UI-дизайне. Я очень доволен сотрудничеством и могу рекомендовать Михаила для разных задач, связанных с дизайном интерфейсов, мобильных приложений и не только.',
-      name: 'Николай Дворянкин', role: 'Founder Teleforce', avatar: 'img/t-author.jpg'
-    },
-    stats: [
-      { n: '×2', text: 'составил рост среднего LTV пользователей', src: 'По данным продуктовой аналитики' },
-      { n: '30%', text: 'составило снижение оттока пользователей', src: 'По данным продуктовой аналитики' },
-      { n: '5', text: 'новых функций внедрено в продукт', src: 'На основе обратной связи юзеров' }
-    ]
-  },
-  template({ slug: 'moskvich-401', title: 'Москвич-401', cover: 'img/cover-moskvich.jpg', tint: '#5f7565' }),
-  template({ slug: 'project-3', title: 'Проект 3', cover: 'img/cover-project3.jpg', tint: '#9a8672' }),
-  template({ slug: 'project-4', title: 'Проект 4', cover: '', tint: '#6f7f96', hero: { d: '', alt: '' } })
+  }
 ];
 
 /* ════════════════════════════════════════════════════════════════
@@ -564,9 +471,16 @@ CASES.forEach((c) => {
     h('a', { class: 'card', href: '#/case/' + encodeURIComponent(c.slug), 'data-slug': c.slug, draggable: 'false', css: Object.assign({ '--tint': c.tint }, shade(c.shade)) },
       c.cover ? h('img', { src: c.cover, alt: '', draggable: 'false' }) : null,
       h('span', { class: 'card__go', html: ICON.ur, 'aria-hidden': 'true' }),
-      h('span', { class: 'card__title', text: c.title }))
+      h('span', { class: 'card__title' }, [].concat(c.lines || c.title).map((t) => h('span', { class: 'ln', text: t }))))
   );
 });
+
+if (SITE.soon) {
+  rail.append(
+    h('div', { class: 'soon', role: 'note' },
+      h('span', { class: 'soon__plus', 'aria-hidden': 'true', html: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M2.5 12h19M12 2.5v19"/></svg>' }),
+      h('p', { text: SITE.soon })));
+}
 
 /* Перетаскивание мышью, колесо → горизонтальная прокрутка, стрелки клавиатуры */
 let dragging = false, startX = 0, startLeft = 0, moved = 0;
