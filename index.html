@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Портфолио Михаила Салькова — AI-автоматизация и продуктовый дизайн.">
+<title>Михаил Сальков</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500&display=swap">
+<style>
+  /* ───────── Токены (палитра из макета, только светлая тема) ─────────
+     Шрифт: Golos Text 400 / 500 · межбуквенный −2% · отступы кратны 8:
+     2 / 4 / 8 / 10 / 12 / 16 / 24 / 32 / 40 / 48 / 56 / 64 / 72 / 80 / 88 / 96 … */
+  :root {
+    --ink: #414753;                       /* 414753 · 100% — текст, тёмные плашки */
+    --ink-50: rgba(65, 71, 83, .5);       /* заголовки разделов */
+    --ink-40: rgba(65, 71, 83, .4);       /* второстепенный текст, ховер-рамка */
+    --ink-20: rgba(65, 71, 83, .2);       /* неактивные точки, разделитель */
+    --ink-10: rgba(65, 71, 83, .1);       /* рамки кнопок */
+    --bg: #ffffff;                        /* FFFFFF · 100% */
+    --panel: #f5f5f5;                     /* F5F5F5 · 100% — карточки, слайдер */
+    --cta: #1a9b3a;                       /* 1A9B3A · 100% — «Связаться» */
+    --cta-hover: #147c2e;
+    --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --col: 800px;                         /* ширина колонки контента */
+    --side: 24px;                         /* боковое поле */
+    color-scheme: light;
+  }
+
+  /* ───────── База ───────── */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 16px/1.2 var(--font);
+    letter-spacing: -0.02em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button, input, textarea { font: inherit; letter-spacing: inherit; color: inherit; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  .app { min-height: 100dvh; display: flex; flex-direction: column; }
+  .wrap { width: min(var(--col), 100% - var(--side) * 2); margin-inline: auto; }
+  #main { flex: 1; display: flex; flex-direction: column; }
+  svg { display: block; }
+
+  /* ───────── Шапка (одинаковая на всех страницах) ───────── */
+  .top { padding-top: 24px; }
+  .bar { height: 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { min-width: 0; font-weight: 500; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  /* ───────── Кнопки (UI-кит) ───────── */
+  .pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 32px; padding: 0 13.5px;   /* + рамка 1px ≈ 14 от края, как в макете */
+    border: 1px solid var(--ink-10); border-radius: 999px;
+    background: var(--bg); color: var(--ink);
+    font: 500 16px/1.2 var(--font); letter-spacing: -0.02em;
+    text-decoration: none; white-space: nowrap; cursor: pointer;
+    transition: border-color .2s, background-color .2s;
+  }
+  .pill:hover { border-color: var(--ink-40); }
+  .pill--cta, .pill--cta:hover { border-color: transparent; }
+  .pill--cta { background: var(--cta); color: #ffffff; }
+  .pill--cta:hover { background: var(--cta-hover); }
+  .pill--hh { padding-left: 8px; }
+  .pill--nav { gap: 10px; }
+  .pill--nav.next { padding-inline: 16px; }
+  .ico { display: inline-flex; }
+  .hh {
+    display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
+    background: #d20d15; color: #fff; font: 700 8px/1 var(--font); letter-spacing: -0.04em;
+  }
+
+  /* ───────── Анимация появления вида ───────── */
+  .view { animation: enter .4s cubic-bezier(.2, .7, .2, 1) both; }
+  @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
+
+  /* ───────── Главная: карусель ───────── */
+  #home { flex: 1; display: flex; align-items: center; padding-block: 96px; }
+  .rail {
+    --gutter: max(var(--side), calc((100% - var(--col)) / 2));
+    flex: 1; min-width: 0;
+    display: flex; align-items: flex-start; gap: 12px;
+    padding-inline: var(--gutter);
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    user-select: none; cursor: grab;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail.dragging { cursor: grabbing; }
+  @media (pointer: coarse) {
+    .rail { scroll-snap-type: x proximity; scroll-padding-inline: var(--gutter); }
+    .rail > * { scroll-snap-align: start; }
+  }
+
+  .intro { flex: 0 0 350px; width: 350px; margin-right: 12px; }      /* 12 + gap 12 = 24 до первой карточки */
+  .intro img { display: block; width: 100%; height: 385px; object-fit: cover; -webkit-user-drag: none; }
+  .intro p { margin: 10px 0 0; font-weight: 500; }
+
+  .card {
+    position: relative; display: block; flex: 0 0 350px; width: 350px; height: 450px;
+    overflow: hidden; isolation: isolate; color: #fff; text-decoration: none;
+    background: var(--tint, #6f7480);
+  }
+  .card img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    transition: transform .7s cubic-bezier(.2, .7, .2, 1); -webkit-user-drag: none;
+  }
+  .card::after {                                                       /* градиент под названием */
+    content: ""; position: absolute; inset: auto 0 0 0; height: var(--sh-h, 102px); z-index: 1; pointer-events: none;
+    background: linear-gradient(to bottom, var(--sh-0, rgba(0, 0, 0, 0)), var(--sh-1, rgba(0, 0, 0, .62)));
+  }
+  .card:hover img { transform: scale(1.04); }                          /* при наведении на карточку растёт только картинка */
+  .card__title { position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 20px; font-weight: 500; }
+  .card__go {                                                          /* кнопка-стрелка: ×2 при наведении на карточку */
+    position: absolute; z-index: 2; top: 20px; right: 20px;
+    width: 32px; height: 32px; display: grid; place-items: center;
+    border-radius: 50%; background: #fff; color: var(--ink);
+    transform-origin: 100% 0; transition: transform .25s cubic-bezier(.2, .7, .2, 1);
+  }
+  .card:hover .card__go, .card:focus-visible .card__go { transform: scale(2); }
+
+  /* ───────── Страница кейса ───────── */
+  #case { padding: 100px 0 96px; }
+  .hero { margin: 48px 0 0; aspect-ratio: 2 / 1; background: var(--panel); }
+  .hero img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .prose > .lead { margin: 24px 0 0; font: 500 24px/1.2 var(--font); }
+
+  .meta { margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 10px 8px; }
+  .meta__i { display: inline-flex; gap: 8px; }
+  .meta__i span { color: var(--ink-40); }
+  .meta__i:not(:last-child)::after { content: "\2022"; color: var(--ink-20); }
+
+  .cards { margin: 56px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cc { padding: 20px; min-height: 280px; background: var(--panel); }
+  .cc small { display: block; font-size: 14px; color: var(--ink-40); }
+  .cc p { margin: 16px 0 0; }
+  .cc--dark { background: var(--ink); color: #fff; }
+  .cc--dark small { color: rgba(255, 255, 255, .4); }
+
+  .sec { margin-top: 56px; }
+  .sec > h2 { margin: 0; font: 500 20px/1.2 var(--font); color: var(--ink-50); }
+  .sec > p { margin: 24px 0 0; }
+  .sec > p + p { margin-top: 1.2em; }
+  .sec > .tags { margin-top: 16px; color: var(--ink-40); }
+
+  .stages { margin: 24px 0 0; }
+  .stage { padding: 16px 0; border-top: 1px solid var(--ink-10); }
+  .stage__head { display: flex; justify-content: space-between; gap: 12px; }
+  .stage__head b { font-weight: 500; }
+  .stage__head span, .stage p { color: var(--ink-40); }
+  .stage p { margin: 8px 0 0; }
+
+  .swatches { margin: 24px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .sw { display: flex; align-items: flex-end; height: 96px; padding: 12px; color: #fff; font-size: 12px; }
+  .sw--light { color: var(--ink); }
+  .sw--line { box-shadow: inset 0 0 0 1px var(--ink-10); }
+
+  /* слайдер */
+  .sl { margin-top: 24px; }
+  .slider { position: relative; background: var(--panel); }
+  .slider__track {
+    display: flex; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none;
+  }
+  .slider__track::-webkit-scrollbar { display: none; }
+  .slide { flex: 0 0 100%; aspect-ratio: 2 / 1; scroll-snap-align: start; scroll-snap-stop: always; }
+  .slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .slide--contain img { object-fit: contain; }
+  .slider__btn {
+    position: absolute; top: 50%; margin-top: -16px; z-index: 2;
+    width: 32px; height: 32px; padding: 0; display: grid; place-items: center;
+    border: 1px solid var(--ink-10); border-radius: 50%; background: var(--panel); color: var(--ink);
+    cursor: pointer; transition: border-color .2s;
+  }
+  .slider__btn:hover { border-color: var(--ink-40); }
+  .slider__btn--prev { left: 20px; }
+  .slider__btn--next { right: 20px; }
+  .slider__dots { position: absolute; left: 50%; bottom: 20px; z-index: 2; display: flex; gap: 4px; transform: translateX(-50%); }
+  .slider__dot { position: relative; width: 4px; height: 4px; padding: 0; border: 0; border-radius: 50%; background: var(--ink-20); cursor: pointer; }
+  .slider__dot::before { content: ""; position: absolute; inset: -8px -2px; }
+  .slider__dot[aria-current="true"] { background: var(--ink); }
+  .slider--shot .slide { aspect-ratio: 1516 / 800; }                    /* скриншоты: показываем целиком, без обрезки */
+  .slider--light .slider__btn { background: transparent; border-color: rgba(255, 255, 255, .2); color: #fff; }
+  .slider--light .slider__btn:hover { border-color: rgba(255, 255, 255, .5); }
+  .slider--light .slider__dot { background: rgba(255, 255, 255, .4); }
+  .slider--light .slider__dot[aria-current="true"] { background: #fff; }
+
+  /* подпись под слайдом: все подписи лежат в одной ячейке, чтобы высота блока не прыгала при листании */
+  .sl__caps { display: grid; margin-top: 10px; font-size: 14px; color: var(--ink-40); }
+  .sl__cap { grid-area: 1 / 1; margin: 0; visibility: hidden; }
+  .sl__cap[data-on] { visibility: visible; }
+
+  /* раздел в рамке / на тёмной плашке */
+  .sec--box, .sec--dark { padding: 20px; border: 1px solid var(--ink-10); }
+  .sec--dark { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .sec--dark > h2 { color: #a0a3a9; }
+  .sec--dark .sl__caps { color: rgba(255, 255, 255, .4); }
+
+  /* нумерованные строки: «№N + название | описание» */
+  .steps { list-style: none; margin: 3px 0 0; padding: 0; }
+  .sec--box > .steps { margin-top: 20px; }
+  .step { display: grid; grid-template-columns: 200px 1fr; column-gap: 24px; padding: 22px 0; }
+  .step + .step { border-top: 1px solid var(--ink-10); }
+  .sec:not(.sec--box) > .steps .step:last-child { padding-bottom: 0; }
+  .step__k { align-self: center; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; color: var(--ink-50); }
+  .step__n { display: grid; place-items: center; min-width: 48px; height: 26px; padding: 0 14px; border-radius: 999px; background: var(--panel); font-size: 14px; }
+  .step__t { margin: 0; align-self: start; }
+  .step__k .ln { display: block; }                                      /* строки названия — как в макете; на мобильном перетекают в одну */
+
+  /* отзыв */
+  .quote { margin: 24px 0 0; }
+  .quote blockquote { position: relative; margin: 0; font: 500 24px/1.2 var(--font); }
+  .quote blockquote::before {
+    content: "\201C"; position: absolute; right: 100%; top: -4px; margin-right: 16px;
+    color: var(--ink-20); font: italic 500 64px/1 Georgia, serif; letter-spacing: 0;
+  }
+  .quote figcaption { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+  .quote img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+  .quote .av { flex: none; width: 42px; height: 42px; margin: 0; display: grid; place-items: center; border-radius: 50%; background: #ff2700; color: #fff; font-size: 12px; font-weight: 500; }
+  .quote b { display: block; font-weight: 500; }
+  .quote span { display: block; margin-top: 8px; font-size: 12px; color: var(--ink-40); }
+
+  .stats { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { display: flex; flex-direction: column; min-height: 250px; padding: 20px; background: var(--panel); }
+  .stat b { font: 500 32px/32px var(--font); }
+  .stat p { margin: 18px 0 0; }
+  .stat small { margin-top: auto; padding-top: 16px; font-size: 12px; color: var(--ink-40); }
+
+  /* «предыдущий / следующий» — липкая панель: стоит внизу окна, пока не дойдёт до конца статьи */
+  .pager {
+    position: sticky; bottom: 24px; z-index: 10; margin-top: 48px;
+    display: flex; justify-content: space-between; gap: 12px; pointer-events: none;
+  }
+  .pager .pill { pointer-events: auto; }
+
+  .missing { margin: 48px 0 0; font: 500 24px/1.2 var(--font); }
+
+  /* ───────── Подвал ───────── */
+  .foot { padding: 0 var(--side) 24px; text-align: center; color: var(--ink-40); font-size: 12px; }
+
+  /* ───────── Мобильная версия ───────── */
+  @media (max-width: 640px) {
+    .pill--hh { width: 32px; padding: 0; }
+    .pill--hh .lbl { display: none; }
+
+    #home { align-items: flex-start; padding-block: 100px 96px; }
+    .rail { flex-direction: column; align-items: stretch; gap: 12px; overflow: visible; cursor: auto; user-select: auto; }
+    .intro { flex: none; width: auto; margin: 0 0 10px; }
+    .intro img { height: auto; aspect-ratio: 354 / 350; }
+    .card { flex: none; width: auto; height: auto; aspect-ratio: 354 / 350; }
+
+    .hero { aspect-ratio: 354 / 350; }
+    .cards, .stats { grid-template-columns: 1fr; }
+    .cc { min-height: 0; padding-bottom: 36px; }
+    .stat { min-height: 216px; }
+    .slide { aspect-ratio: 354 / 350; }
+    .swatches { grid-template-columns: repeat(2, 1fr); }
+    .quote blockquote::before { display: none; }
+    .step { grid-template-columns: 1fr; row-gap: 12px; }
+    .step__k { flex-direction: row; justify-content: flex-start; gap: 12px; text-align: left; }
+    .step__t { align-self: auto; }
+    .step__k .ln { display: inline; }
+
+    .pager .pill--nav { width: 32px; padding: 0; }
+    .pager .pill--nav .txt { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .view { animation: none; }
+    .card img, .card__go { transition: none; }
+    .slider__track { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="wrap bar">
+      <a class="brand" href="#/" id="name"></a>
+      <nav class="actions" aria-label="Контакты">
+        <a class="pill pill--hh" id="resume" target="_blank" rel="noopener" aria-label="Резюме на hh"><span class="hh" aria-hidden="true">hh</span><span class="lbl">Резюме на hh</span></a>
+        <a class="pill pill--cta" id="contact" target="_blank" rel="noopener">Связаться</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="home" class="view" aria-label="Кейсы">
+      <div class="rail" id="rail" role="region" aria-label="Карусель кейсов"></div>
+    </section>
+    <section id="case" class="view" hidden></section>
+  </main>
+
+  <footer class="foot" id="legal"></footer>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   НАСТРОЙКИ — правьте здесь: ссылки, тексты и список кейсов.
+   ════════════════════════════════════════════════════════════════ */
+const SITE = {
+  name:    'Михаил Сальков',
+  intro:   'Добро пожаловать! Меня зовут Михаил, я специалист по AI-автоматизации с опытом более 8-ми лет в продуктовом дизайне',
+  resume:  'https://hh.ru/',                 // ← ссылка на резюме
+  contact: 'https://t.me/ma_salkov',         // ← кнопка «Связаться»
+  legal:   'ИП Сальков Михаил Александрович, ИНН: 772916478709',
+  portrait:'img/portrait.jpg'
+};
+
+/* ────────────────────────────────────────────────────────────────
+   Кейсы. Порядок в массиве = порядок в карусели и в кнопках «предыдущий / следующий».
+   Страница кейса собирается по шаблону из макета:
+     slug, title, cover, tint   — адрес, название и обложка карточки (если обложки нет — цвет tint)
+     shade {h, rgb, a}?         — затемнение под названием на карточке (по умолчанию чёрный 0→62% на 102px)
+     hero   {d, m?, alt}        — большая картинка 2:1 (m — вариант для мобильной версии)
+     lead                       — крупный вводный абзац
+     meta   [[название, значение], …]   — строка «Категория · Тип · Платформа · Период»
+     cards  [{label, text, dark?}, …]   — три карточки под вводным абзацем
+     sections [{title, paras[], tags?, stages?, swatches?, slides?}]   — разделы
+         slides [{src, alt, caption?, contain?}]  — слайдер под текстом раздела (без src — пустой слот);
+                caption — подпись под слайдом (для нового кейса берётся из названия файла картинки)
+         steps  [{name, text}]      — нумерованные строки «№N Название | описание»
+         box / dark: true           — раздел в рамке / на тёмной плашке
+         slider {light?, shot?}     — светлые стрелки и точки (для ярких картинок) / показывать картинку целиком (2:1 → 1516×800)
+     quote  {text, name, role, avatar | initials}  — отзыв (раздел «Результат»); initials — буквы в цветном круге вместо фото
+     stats  [{n, text, src}, …]         — три карточки с цифрами
+   ──────────────────────────────────────────────────────────────── */
+const S1 = 'Lorem ipsum dolor sit amet consectetur. Nullam vulputate orci bibendum aliquet commodo tellus viverra mi. Condimentum dignissim et quis sed dictumst sit purus eu. Risus iaculis pulvinar nullam risus nibh id at neque tempor. Ante adipiscing velit tempor tortor enim auctor purus.';
+const L1 = S1 + ' ' + S1 + S1;
+const EMPTY5 = () => [{}, {}, {}, {}, {}];
+
+/* Шаблон для кейсов, которые ещё не наполнены (тексты-заглушки из макета) */
+const template = (o) => Object.assign({
+  lead: 'Lorem ipsum dolor sit amet consectetur. Nullam vulputate orci bibendum aliquet commodo tellus viverra mi. Condimentum dignissim et quis sed dictumst sit purus eu. Risus iaculis pulvinar nullam risus nibh id at neque tempor.',
+  hero: { d: o.cover, alt: '' },
+  meta: [['Категория', 'B2B / SAAS'], ['Тип', 'Таск-трекер'], ['Платформа', 'Web'], ['Период', '2025']],
+  cards: [
+    { label: 'Задача',   text: 'Lorem ipsum dolor sit amet consectetur. Tincidunt volutpat porta neque a a. Blandit commodo in egestas ut amet in sed quam. Et ultricies luctus integer lacus eget. Felis habitasse massa varius magna suspendisse.' },
+    { label: 'Моя роль', text: 'Lorem ipsum dolor sit amet consectetur. Cras adipiscing ullamcorper sit sit sed eu. Ultricies eu id lacinia tincidunt. Pulvinar a duis id etiam praesent et justo lacinia. Molestie lacus cursus cursus sem.' },
+    { label: 'Результат', dark: true, text: 'Lorem ipsum dolor sit amet consectetur. Tincidunt ut donec condimentum ut. Etiam donec dis gravida fermentum nunc mauris felis id a. Eget venenatis lacus mattis neque pharetra. Tincidunt non massa in eu at amet.' }
+  ],
+  sections: [
+    { title: 'Задача', paras: [L1] },
+    { title: 'Процесс реализации', paras: [L1], slides: EMPTY5() },
+    { title: 'Сложности', paras: [L1] },
+    { title: 'Решение', paras: [L1, L1], slides: EMPTY5() }
+  ],
+  quote: {
+    text: 'Михаил делал для нашего проекта редизайн Telegram-миниапа, админ-панели и других продуктов. Я доволен не только результатом, но и скоростью работы. Особенно важно, что каждое своё решение Михаил мог обосновать и объяснить с точки зрения актуальных трендов в UX/UI-дизайне. Я очень доволен сотрудничеством и могу рекомендовать Михаила для разных задач, связанных с дизайном интерфейсов, мобильных приложений и не только.',
+    name: 'Николай Дворянкин', role: 'Founder Teleforce', avatar: 'img/t-author.jpg'
+  },
+  stats: [
+    { n: '1', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'Внутренний тайм-трекинг проекта' },
+    { n: '1', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'Фидбек команды Teleforce' },
+    { n: '5', text: 'Lorem ipsum dolor sit amet consectetur. Condimentum arcu aliquet pellentesque id maecenas venenatis iaculis. Nisl viverra lectus', src: 'UX-структура проекта' }
+  ]
+}, o);
+
+const CASES = [
+  {
+    slug: 'ai-administrator',
+    title: 'AI-администратор, который круглосуточно консультирует клиентов по услугам салона и помогает перейти к онлайн-записи',
+    cover: 'img/cover-ai.jpg', tint: '#f2400a', shade: { h: 190, rgb: '30, 30, 30', a: 1 },   // длинное название — затемнение выше и плотнее, как в макете обложки
+    hero: { d: 'img/hero-ai.jpg', alt: 'Telegram-бот салона: консультация по стоимости маникюра' },
+    lead: 'AI-администратор, который круглосуточно консультирует клиентов по услугам салона и помогает перейти к онлайн-записи',
+    meta: [['Категория', 'B2B / Beauty'], ['Тип', 'AI-ассистент'], ['Период', '2025']],
+    cards: [
+      { label: 'Задача', text: 'Обеспечить круглосуточную первичную консультацию и снизить нагрузку на администратора, сохранив возможность быстро обратиться к сотруднику.' },
+      { label: 'Моя роль', text: 'Изучил потребности бизнеса и клиентов, спроектировал сценарии общения и реализовал их в n8n. После запуска собрал обратную связь, доработал ассистента и передал решение команде салона.' },
+      { label: 'Результат', dark: true, text: 'Клиенты стали получать ответы за секунды в любое время суток, а админы — тратить примерно вдвое меньше времени на типовые вопросы. После внедрения решения выручка салона выросла на 10%.' }
+    ],
+    sections: [
+      { title: 'Задача',
+        paras: [
+          'Администратор салона совмещает общение с посетителями, обработку обращений и организационные задачи. В часы высокой нагрузки он не всегда может сразу ответить потенциальному клиенту, а ночью обращения остаются без внимания до начала рабочего дня. Дополнительная сложность — объём информации об услугах. Сотруднику необходимо ориентироваться в предложениях салона и помогать клиенту определиться с дальнейшими действиями. Ожидание ответа или необходимость повторно связываться с салоном создают риск потери записи (клиент может отложить решение или выбрать другое место).',
+          'Нужно было автоматизировать первичную консультацию и сделать её доступной независимо от занятости сотрудников. При этом решение должно было оставаться экономически доступным для небольшого бизнеса и сохранять возможность обратиться к человеку в сложной ситуации.'
+        ] },
+      { title: 'Процесс реализации', box: true,
+        steps: [
+          { name: 'Дискавери', text: 'Обсудил с руководством и сотрудниками процесс обработки обращений, выявил типовые вопросы клиентов и ситуации, требующие участия администратора. Изучил имеющиеся материалы о салоне и собрал обратную связь команды. Этот этап позволил определить, какие обращения можно автоматизировать, какие данные понадобятся для ответов и в каких случаях необходимо подключать человека.' },
+          { name: ['Подготовка', 'базы знаний'], text: 'По результатам дискавери подготовил бриф, по которому команда салона заполнила документ с информацией для ассистента. Уточнил необходимые детали, чтобы ответы опирались на реальные услуги и условия работы салона. Подключил автоматизацию к корпоративному Google Drive, куда сотрудники могут загружать данные в виде Docs, PDF или MD. Команда получила простой способ управлять информацией, которую использует ассистент.' },
+          { name: ['Разработка и', 'подключение', 'Telegram-бота'], text: 'Собрал автоматизацию в n8n, создал Telegram-бота и подключил его по API. Настроил ответы по базе знаний, переход к онлайн-записи и передачу обращений администратору, а также добавил в боте отдельную кнопку вызова оператора. Клиент может воспользоваться ей напрямую, без необходимости проходить дополнительные вопросы бота. Если ассистент не может ответить самостоятельно, он сообщает об этом и предлагает вызвать сотрудника.' },
+          { name: ['Тестирование', 'перед запуском'], text: 'Проверил основные сценарии (консультацию по информации салона, переход к записи и обращение к оператору). Отдельное внимание уделил вопросам, на которые ассистент не должен давать самостоятельный ответ. Тестирование помогло проверить не только работу автоматизации, но и понятность общения (получает ли клиент полезный ответ и понимает ли, что делать дальше).' },
+          { name: ['Запуск и доработка на', 'реальных обращениях'], text: 'После запуска в течение недели собирал обратную связь клиентов и сотрудников, отслеживал возникающие проблемы и проводил техническую отладку. По результатам использования доработал сценарии и ответы ассистента. Это позволило учесть ситуации, которые не проявились во время предварительного тестирования, и адаптировать решение к реальному общению с клиентами.' },
+          { name: ['Передача решения', 'команде'], text: 'Подготовил инструкции по работе с автоматизацией и передал их сотрудникам салона. Зафиксировал порядок использования ассистента и обновления информации, чтобы команда могла поддерживать его работу после завершения внедрения.' }
+        ],
+        slider: { light: true, shot: true },
+        /* подписи — из названий файлов картинок */
+        slides: [
+          { src: 'img/ai-s1-1.jpg', alt: 'Совещание с руководством: карта обращений клиентов в Google Docs', caption: 'Скриншот с совещания, на котором я запрашивал у руководства интересующую меня информацию' },
+          { src: 'img/ai-s1-2.jpg', alt: 'База знаний салона на Google Диске', caption: 'Скриншот базы знаний салона, на основе которой ассистент дает ответы на вопросы клиентов' },
+          { src: 'img/ai-s1-3.jpg', alt: 'Схема автоматизации в n8n', caption: 'Скриншот части автоматизации в N8N' },
+          { src: 'img/ai-s1-4.jpg', alt: 'Ответ бота на вопрос, на который он не может ответить', caption: 'Пример обработки запросов, на которые ассистент не может дать ответа' },
+          { src: 'img/ai-s1-5.jpg', alt: 'Таблица обратной связи для доработки ассистента', caption: 'Скриншот одного из рабочих артефактов, в процессе доработки ассистента на основе обратной связи' }
+        ] },
+      { title: 'Сложности',
+        steps: [
+          { name: ['Опасения получить', 'негатив от клиентов'], text: 'Руководство опасалось, что автоматизация вызовет раздражение (клиент столкнётся с неподходящими ответами и не сможет быстро связаться с человеком). Это могло повлиять на доверие к салону и количество записей. Чтобы сохранить контроль за клиентом, добавил явную кнопку вызова оператора. По нажатию, запрос сразу передаётся сотруднику. Если вопрос выходит за возможности ассистента, бот сам предлагает воспользоваться этой кнопкой. В нерабочее время сообщает часы работы администратора, чтобы не создавать ожидания немедленного ответа.' },
+          { name: ['Актуальность', 'информации'], text: 'Ответы ассистента зависят от содержания базы знаний. Даже при простом обновлении через Google Drive остаётся риск, что сотрудники забудут внести изменения (например, обновят информацию на сайте, но не в документе). По этому я дополнительно предусмотрел ежедневную автоматическую проверку сайта с переносом обнаруженных изменений в базу знаний.' }
+        ] },
+      { title: 'Решение', dark: true,
+        paras: [
+          'Разработал и внедрил AI-ассистента на базе n8n для автоматизации первичного обслуживания клиентов салона через Telegram-мессенджер. Решение объединяет консультации по базе знаний, переход к онлайн-записи и передачу обращений сотруднику с учетом рабочего времени, в единый пользовательский сценарий.',
+          'Подключил базу знаний к корпоративному Google Drive, чтобы команда могла обновлять информацию через привычные документы в максимально простом формате, предусмотрел автоматических сценарий обновления информации, а также заложил функционал прямого вызова администратора (клиент может обратиться к человеку на любом этапе диалога, а при сложном вопросе ассистент сам предлагает такую возможность). После запуска доработал решение на основе реальных обращений и обратной связи клиентов, подготовил инструкции и передал систему команде для дальнейшей эксплуатации.'
+        ],
+        slider: { light: true, shot: true },
+        slides: [
+          { src: 'img/ai-s2-1.jpg', alt: 'Диалог с ботом: стоимость маникюра и переход к записи', caption: 'Пример консультации по услугам салона и перевода к онлайн-записи' },
+          { src: 'img/ai-s2-2.jpg', alt: 'Диалог с ботом: прямой переход к онлайн-записи', caption: 'Пример прямого перевода к онлайн-записи' },
+          { src: 'img/ai-s2-3.jpg', alt: 'Диалог с ботом: перевод на оператора', caption: 'Пример перевода на оператора в сложных запросах' },
+          { src: 'img/ai-s2-4.jpg', alt: 'Диалог с ботом: перевод на оператора в нерабочее время', caption: 'Пример перевода на оператора в сложных вопросах в нерабочее время' }
+        ] }
+    ],
+    quote: {
+      text: 'Честно говоря, сначала относились к этой идее скептически. Казалось, что будет больше хлопот, чем пользы. Но решили попробовать и в итоге остались очень довольны. Спасибо вам за терпение, за то, что спокойно отвечали на наши вопросы и помогли во всём разобраться.',
+      name: 'Благодарственное письмо', role: 'Коллектив салона (Москва, ЗАО)', initials: 'NDA'
+    },
+    stats: [
+      { n: '+10%', text: 'Рост выручки салона после внедрения решения', src: 'По данным руководства' },
+      { n: '9,0', text: 'NPS удовлетворённости клиентов AI-ассистентом', src: 'По данным опроса 25 клиентов' },
+      { n: '-50%', text: 'Снижение нагрузки на администраторов', src: 'По оценке сотрудников' }
+    ]
+  },
+  {
+    slug: 'teleforce', title: 'Teleforce', cover: 'img/cover-teleforce.jpg', tint: '#7a7468',
+    hero: { d: 'img/hero-teleforce.jpg', m: 'img/hero-teleforce-m.jpg', alt: 'Телефон с приложением Teleforce на бетонной поверхности' },
+    lead: 'Telegram – удобный мессенджер, но в нем сложно управлять командой. Teleforce добавляет недостающие функции: управление задачами, корпоративные папки, AI-поиск, рассылки и контроль доступа – без сложных интеграций и новых приложений.',
+    meta: [['Категория', 'B2B / SaaS'], ['Тип', 'Mini app'], ['Платформа', 'Mobile'], ['Стадия', 'Запуск'], ['Период', '2025']],
+    cards: [
+      { label: 'Задача', text: 'Редизайн Mini App, улучшение ключевых сценариев, снижение оттока аудитории и проектирование новых функций для роста LTV.' },
+      { label: 'Моя роль', text: 'Полный цикл UX/UI: исследования, интервью, новые функции, развитие дизайн-системы, передача в разработку и сопровождение.' },
+      { label: 'Результат', dark: true, text: 'Переработал пользовательский опыт продукта, обновил ключевые сценарии и спроектировал новые функции, что позволило повысить вовлеченность аудитории, LTV и ценность сервиса в целом.' }
+    ],
+    sections: [
+      { title: 'Задача',
+        paras: ['Провести редизайн существующего Mini App, повысить удобство ключевых пользовательских сценариев, устранить точки повышающие отток аудитории и спроектировать новые функции на основе обратной связи пользователей для увеличения LTV и ценности продукта.'] },
+      { title: 'Моя роль',
+        paras: ['Отвечал за полный цикл UX/UI-проектирования — от исследований, интервью с пользователями и анализа конкурентов до проектирования новых функций, развития дизайн-системы, передачи макетов в разработку и сопровождения реализации продукта.'] },
+      { title: 'Процесс реализации',
+        paras: ['Выстроил дизайн-процесс на основе исследований пользователей и анализа их поведения — от выявления причин оттока и формулирования гипотез до проектирования новых функций, редизайна интерфейсов и сопровождения реализации совместно с командой разработки.'],
+        stages: [
+          { name: 'Дискавери и ресерч', time: '2 нед', tags: 'Бриф, анализ продукта, интервью, гипотезы, конкурентный анализ' },
+          { name: 'UX-дизайн', time: '1 нед', tags: 'User Flow, сценарии, архитектура, UX-логика, приоритизация' },
+          { name: 'UI-дизайн', time: '3 нед', tags: 'Вайрфреймы, концепт, UI-кит, редизайн, новые функции' },
+          { name: 'Передача в разработку', time: '2 нед', tags: 'Ревью, обратная связь, итерационные улучшения, контроль реализации' }
+        ],
+        slides: [
+          { src: 'img/ph-1.jpg', alt: 'Телефон с приложением Teleforce в руке' },
+          { src: 'img/ph-2.jpg', alt: 'Рука с телефоном у перил' },
+          { src: 'img/ph-3.jpg', alt: 'Карточка пользователя с конфетти на экране телефона' },
+          { src: 'img/ph-4.jpg', alt: 'Телефон на бетонных ступенях' },
+          { src: 'img/ph-5.jpg', alt: 'База знаний на экране телефона' }
+        ] },
+      { title: 'Сложности',
+        paras: ['Основной сложностью было определить реальные причины оттока пользователей и улучшить продукт таким образом, чтобы повысить удержание аудитории без усложнения ключевых сценариев.'] },
+      { title: 'Решение',
+        paras: ['Выявил наиболее частые барьеры в использовании продукта, спроектировал новые функции и переработал уже существующие сценарии, повысив ценность сервиса для пользователей.'] },
+      { title: 'Редизайн старых фичей',
+        paras: ['Переработал ключевые пользовательские сценарии и существующие разделы продукта, повысив понятность интерфейсов, скорость выполнения задач и удобство ежедневного использования сервиса.'],
+        slides: [
+          { src: 'img/sl-states.jpg', alt: 'Экраны состояний: было и стало', contain: true },
+          { src: 'img/sl-subscription.jpg', alt: 'Экран подписки: было и стало', contain: true },
+          { src: 'img/sl-streams.jpg', alt: 'Раздел «Потоки»: было и стало', contain: true },
+          { src: 'img/sl-hub.jpg', alt: 'Раздел «База знаний» (теперь «Хаб»): было и стало', contain: true },
+          { src: 'img/sl-people.jpg', alt: 'Раздел «Участники» (теперь «Люди» со встроенным тиндером): было и стало', contain: true }
+        ] },
+      { title: 'Дизайн новых фичей',
+        paras: ['Спроектировал новые функциональные возможности на основе пользовательской обратной связи и продуктовых гипотез, расширив ценность сервиса и усилив вовлеченность аудитории.',
+                'И еще десятки других экранов. Чтобы показать все — пришлось бы растянуть слайд с дизайном на километры :)'],
+        slides: [
+          { src: 'img/sl-onboarding.jpg', alt: 'Онбординг после регистрации', contain: true },
+          { src: 'img/sl-search.jpg', alt: 'Умный поиск и саммари', contain: true },
+          { src: 'img/sl-profiles.jpg', alt: 'Мой профиль и профиль пользователя', contain: true }
+        ] },
+      { title: 'Применение ИИ',
+        paras: ['Использовал ИИ для генерации контента, структурирования требований, поиска решений и прототипирования, что помогло ускорить процесс проектирования и сократить время на рутинные задачи.'],
+        tags: 'ChatGPT · Claude · Cursor' },
+      { title: 'Исследования',
+        paras: ['Проводил исследования на протяжении всего проекта — анализировал причины оттока, изучал обратную связь, проводил интервью и проверял продуктовые гипотезы, чтобы определить направления развития и повысить LTV.'],
+        tags: 'CustDev · JTBD · Product Discovery' },
+      { title: 'Работа в Figma',
+        paras: ['Развивал дизайн-систему продукта, используя компоненты, варианты и Auto Layout, что обеспечило консистентность интерфейсов, удобство масштабирования продукта и эффективное взаимодействие с разработкой.'],
+        tags: 'Variables · Components · Auto Layout' },
+      { title: 'UI',
+        paras: ['Сформировал визуальную UI-систему с современной типографикой, цветовой палитрой и консистентным набором иконок, обеспечив читаемость интерфейса и целостное восприятие продукта.'],
+        tags: 'Шрифт: Inter',
+        swatches: [['#1DA0FF', ''], ['#000000', ''], ['#848484', ''], ['#D3EAFF', 'sw--light'], ['#F5F7F9', 'sw--light sw--line']] }
+    ],
+    quote: {
+      text: 'Михаил делал для нашего проекта редизайн Telegram-миниапа, админ-панели и других продуктов. Я доволен не только результатом, но и скоростью работы. Особенно важно, что каждое своё решение Михаил мог обосновать и объяснить с точки зрения актуальных трендов в UX/UI-дизайне. Я очень доволен сотрудничеством и могу рекомендовать Михаила для разных задач, связанных с дизайном интерфейсов, мобильных приложений и не только.',
+      name: 'Николай Дворянкин', role: 'Founder Teleforce', avatar: 'img/t-author.jpg'
+    },
+    stats: [
+      { n: '×2', text: 'составил рост среднего LTV пользователей', src: 'По данным продуктовой аналитики' },
+      { n: '30%', text: 'составило снижение оттока пользователей', src: 'По данным продуктовой аналитики' },
+      { n: '5', text: 'новых функций внедрено в продукт', src: 'На основе обратной связи юзеров' }
+    ]
+  },
+  template({ slug: 'moskvich-401', title: 'Москвич-401', cover: 'img/cover-moskvich.jpg', tint: '#5f7565' }),
+  template({ slug: 'project-3', title: 'Проект 3', cover: 'img/cover-project3.jpg', tint: '#9a8672' }),
+  template({ slug: 'project-4', title: 'Проект 4', cover: '', tint: '#6f7f96', hero: { d: '', alt: '' } })
+];
+
+/* ════════════════════════════════════════════════════════════════
+   Дальше — логика сайта. Обычно её трогать не нужно.
+   ════════════════════════════════════════════════════════════════ */
+const $ = (s) => document.querySelector(s);
+const svg = (d, s) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+const ICON = {
+  ur: svg('<path d="M7 7h10v10"/><path d="M7 17 17 7"/>', 16),
+  l:  svg('<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>', 20),
+  r:  svg('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>', 20)
+};
+/* h(тег, свойства, …дети). css:{…} — стили через CSSOM */
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'css') for (const [p, val] of Object.entries(v)) el.style.setProperty(p, val);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) el.append(kid);
+  return el;
+}
+const ico = (name) => h('span', { class: 'ico', html: ICON[name] });
+const plainClick = (e) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+const img = (src, alt) => h('img', { src, alt: alt || '' });
+
+const homeView = $('#home'), caseView = $('#case'), rail = $('#rail');
+
+/* ── Шапка и подвал ── */
+$('#name').textContent = SITE.name;
+$('#resume').href = SITE.resume;
+$('#contact').href = SITE.contact;
+$('#legal').textContent = SITE.legal;
+
+/* Затемнение под названием на карточке: {h — высота, rgb — цвет, a — непрозрачность внизу}. По умолчанию — чёрный 0→62% на 102px */
+const shade = (o) => o ? { '--sh-h': o.h + 'px', '--sh-0': 'rgba(' + o.rgb + ', 0)', '--sh-1': 'rgba(' + o.rgb + ', ' + o.a + ')' } : {};
+
+/* ── Главная: карусель ── */
+rail.append(
+  h('div', { class: 'intro' },
+    h('img', { src: SITE.portrait, alt: SITE.name, draggable: 'false' }),
+    h('p', { text: SITE.intro }))
+);
+CASES.forEach((c) => {
+  rail.append(
+    h('a', { class: 'card', href: '#/case/' + encodeURIComponent(c.slug), 'data-slug': c.slug, draggable: 'false', css: Object.assign({ '--tint': c.tint }, shade(c.shade)) },
+      c.cover ? h('img', { src: c.cover, alt: '', draggable: 'false' }) : null,
+      h('span', { class: 'card__go', html: ICON.ur, 'aria-hidden': 'true' }),
+      h('span', { class: 'card__title', text: c.title }))
+  );
+});
+
+/* Перетаскивание мышью, колесо → горизонтальная прокрутка, стрелки клавиатуры */
+let dragging = false, startX = 0, startLeft = 0, moved = 0;
+rail.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  dragging = true; moved = 0; startX = e.clientX; startLeft = rail.scrollLeft;
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - startX;
+  moved = Math.max(moved, Math.abs(dx));
+  if (moved > 4) { rail.classList.add('dragging'); rail.scrollLeft = startLeft - dx; }
+});
+window.addEventListener('pointerup', () => {
+  if (!dragging) return;
+  dragging = false; rail.classList.remove('dragging');
+  setTimeout(() => { moved = 0; }, 0);
+});
+rail.addEventListener('click', (e) => { if (moved > 4) { e.preventDefault(); e.stopPropagation(); } }, true);
+rail.addEventListener('wheel', (e) => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  const max = rail.scrollWidth - rail.clientWidth;
+  if (max <= 0) return;
+  if ((e.deltaY > 0 && rail.scrollLeft < max - 1) || (e.deltaY < 0 && rail.scrollLeft > 0)) {
+    e.preventDefault(); rail.scrollLeft += e.deltaY;
+  }
+}, { passive: false });
+
+/* ── Слайдер: стрелки, точки, свайп (scroll-snap) ── */
+function slider(slides, label, opt = {}) {
+  const n = slides.length;
+  const track = h('div', { class: 'slider__track', tabindex: '0', role: 'group', 'aria-label': label },
+    slides.map((s, i) => h('div', { class: 'slide' + (s.contain ? ' slide--contain' : ''), role: 'group', 'aria-roledescription': 'slide', 'aria-label': (i + 1) + ' из ' + n },
+      s.src ? img(s.src, s.alt) : null)));
+  const dots = slides.map((_, i) => h('button', { class: 'slider__dot', type: 'button', 'aria-label': 'Слайд ' + (i + 1) }));
+  const caps = slides.map((sl) => h('p', { class: 'sl__cap', text: sl.caption || '' }));      // подписи под слайдами
+  let target = null;                                   // слайд, к которому едем по клику (пока идёт анимация)
+  const width = () => Math.max(1, track.clientWidth);
+  const cur = () => target != null ? target : Math.round(track.scrollLeft / width());
+  const mark = () => {
+    const c = cur();
+    dots.forEach((d, i) => d.setAttribute('aria-current', i === c ? 'true' : 'false'));
+    caps.forEach((p, i) => p.toggleAttribute('data-on', i === c));
+  };
+  const go = (i) => {
+    target = ((i % n) + n) % n;
+    mark();
+    track.scrollTo({ left: target * width(), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+  const prev = h('button', { class: 'slider__btn slider__btn--prev', type: 'button', 'aria-label': 'Предыдущий слайд', html: ICON.l });
+  const next = h('button', { class: 'slider__btn slider__btn--next', type: 'button', 'aria-label': 'Следующий слайд', html: ICON.r });
+  prev.addEventListener('click', () => go(cur() - 1));
+  next.addEventListener('click', () => go(cur() + 1));
+  dots.forEach((d, i) => d.addEventListener('click', () => go(i)));
+  track.addEventListener('scroll', () => {
+    if (target != null && Math.abs(track.scrollLeft - target * width()) < 2) target = null;
+    mark();
+  }, { passive: true });
+  ['pointerdown', 'wheel', 'touchstart'].forEach((ev) => track.addEventListener(ev, () => { target = null; }, { passive: true }));
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(cur() + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur() - 1); }
+  });
+  mark();
+  const box = h('div', { class: 'slider' + (opt.light ? ' slider--light' : '') + (opt.shot ? ' slider--shot' : ''), role: 'region', 'aria-roledescription': 'carousel', 'aria-label': label },
+    track, prev, next, h('div', { class: 'slider__dots' }, dots));
+  const hasCaps = slides.some((sl) => sl.caption);
+  return h('div', { class: 'sl' }, box, hasCaps ? h('div', { class: 'sl__caps', 'aria-live': 'polite' }, caps) : null);
+}
+
+/* ── Блоки страницы кейса ── */
+function hero(c) {
+  const r = c.hero || {};
+  return h('figure', { class: 'hero' },
+    r.d ? h('picture', {}, r.m ? h('source', { media: '(max-width: 640px)', srcset: r.m }) : null, img(r.d, r.alt)) : null);
+}
+const meta = (items) => h('p', { class: 'meta' }, items.map(([k, v]) => h('span', { class: 'meta__i' }, h('span', { text: k }), v)));
+const cards = (list) => h('div', { class: 'cards' }, list.map((c) =>
+  h('div', { class: 'cc' + (c.dark ? ' cc--dark' : '') }, h('small', { text: c.label }), h('p', { text: c.text }))));
+
+const steps = (list) => h('ol', { class: 'steps' }, list.map((g, i) =>
+  h('li', { class: 'step' },
+    h('div', { class: 'step__k' }, h('span', { class: 'step__n', text: '№' + (i + 1) }),
+      h('span', {}, [].concat(g.name).flatMap((ln, j) => [j ? ' ' : null, h('span', { class: 'ln', text: ln })]))),
+    h('p', { class: 'step__t', text: g.text }))));
+
+function section(s) {
+  return h('section', { class: 'sec' + (s.box ? ' sec--box' : '') + (s.dark ? ' sec--dark' : '') },
+    h('h2', { text: s.title }),
+    (s.paras || []).map((t) => h('p', { text: t })),
+    s.tags ? h('p', { class: 'tags', text: s.tags }) : null,
+    s.steps ? steps(s.steps) : null,
+    s.stages ? h('div', { class: 'stages' }, s.stages.map((g) =>
+      h('div', { class: 'stage' }, h('div', { class: 'stage__head' }, h('b', { text: g.name }), h('span', { text: g.time })), h('p', { text: g.tags })))) : null,
+    s.swatches ? h('div', { class: 'swatches' }, s.swatches.map(([hex, cls]) => h('div', { class: 'sw ' + cls, text: hex, css: { background: hex } }))) : null,
+    s.slides ? slider(s.slides, s.title, s.slider) : null);
+}
+const resultSection = (q) => h('section', { class: 'sec' },
+  h('h2', { text: 'Результат' }),
+  h('figure', { class: 'quote' },
+    h('blockquote', { text: q.text }),
+    h('figcaption', {}, q.avatar ? img(q.avatar, '') : (q.initials ? h('span', { class: 'av', text: q.initials, 'aria-hidden': 'true' }) : null), h('div', {}, h('b', { text: q.name }), h('span', { text: q.role })))));
+const stats = (list) => h('div', { class: 'stats' }, list.map((s) =>
+  h('div', { class: 'stat' }, h('b', { text: s.n }), h('p', { text: s.text }), h('small', { text: s.src }))));
+
+/* ── Страница кейса ── */
+function caseHref(i) { return '#/case/' + encodeURIComponent(CASES[i].slug); }
+
+function pagerLink(i, dir) {
+  const prev = dir === 'prev';
+  const txt = h('span', { class: 'txt', text: prev ? 'Предыдущий кейс' : 'Следующий кейс' });
+  return h('a', { class: 'pill pill--nav ' + dir, href: caseHref(i), 'data-go': dir, title: CASES[i].title,
+                  'aria-label': (prev ? 'Предыдущий кейс: ' : 'Следующий кейс: ') + CASES[i].title },
+    prev ? [ico('l'), txt] : [txt, ico('r')]);
+}
+const backLink = () => h('a', { class: 'pill pill--nav', href: '#/', id: 'back' }, ico('l'), h('span', { text: 'Все кейсы' }));
+
+function renderCase(i) {
+  const c = CASES[i], n = CASES.length;
+  const article = h('article', { class: 'prose' },
+    h('h1', { class: 'sr-only', text: c.title }),
+    hero(c),
+    h('p', { class: 'lead', text: c.lead }),
+    meta(c.meta), cards(c.cards),
+    c.sections.map(section),
+    c.quote ? resultSection(c.quote) : null,
+    c.stats ? stats(c.stats) : null);
+  caseView.replaceChildren(h('div', { class: 'wrap' }, backLink(), article,
+    n > 1 ? h('nav', { class: 'pager', 'aria-label': 'Другие кейсы' }, pagerLink((i - 1 + n) % n, 'prev'), pagerLink((i + 1) % n, 'next')) : null));
+  document.title = c.title + ' — ' + SITE.name;
+}
+
+function renderMissing() {
+  caseView.replaceChildren(h('div', { class: 'wrap' }, backLink(), h('p', { class: 'missing', text: 'Такого кейса нет' })));
+  document.title = SITE.name;
+}
+
+/* Клики: «Все кейсы» и «предыдущий / следующий» */
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('#back, [data-go]');
+  if (!a || !plainClick(e)) return;
+  e.preventDefault();
+  if (a.id === 'back') {
+    if (enteredFromHome) history.back(); else location.hash = '#/';
+  } else {
+    replacing = true;                       // не засоряем историю: «Назад» браузера ведёт на главную
+    location.replace(a.getAttribute('href'));
+  }
+});
+
+/* ── Маршрутизация: #/ — главная, #/case/<slug> — кейс ── */
+let prevRoute = null, enteredFromHome = false, replacing = false, savedScroll = 0, lastSlug = null, currentIndex = -1;
+function replay(el) { el.classList.remove('view'); void el.offsetWidth; el.classList.add('view'); }
+
+function route() {
+  const m = location.hash.match(/^#\/case\/([^/?#]+)/);
+  const name = m ? 'case' : 'home';
+  if (prevRoute === 'home') savedScroll = rail.scrollLeft;
+
+  document.body.dataset.view = name;
+  if (name === 'case') {
+    const slug = decodeURIComponent(m[1]);
+    const i = CASES.findIndex((c) => c.slug === slug);
+    if (!replacing) enteredFromHome = prevRoute === 'home' ? true : (prevRoute === null ? false : enteredFromHome);
+    if (i >= 0) { renderCase(i); lastSlug = slug; currentIndex = i; } else { renderMissing(); currentIndex = -1; }
+    homeView.hidden = true; caseView.hidden = false;
+    replay(caseView);
+    window.scrollTo(0, 0);
+  } else {
+    homeView.hidden = false; caseView.hidden = true;
+    rail.scrollLeft = savedScroll;
+    if (lastSlug) {                         // вернулись — показываем карточку, из которой ушли
+      const card = rail.querySelector('[data-slug="' + CSS.escape(lastSlug) + '"]');
+      if (card && rail.scrollWidth > rail.clientWidth) {
+        const rb = rail.getBoundingClientRect(), cb = card.getBoundingClientRect();
+        if (cb.right > rb.right - 24) rail.scrollLeft += cb.right - rb.right + 24;
+        else if (cb.left < rb.left + 24) rail.scrollLeft += cb.left - rb.left - 24;
+      }
+    }
+    document.title = SITE.name;
+    replay(homeView);
+  }
+  prevRoute = name; replacing = false;
+}
+window.addEventListener('hashchange', route);
+route();
+
+/* ── Клавиатура ── */
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.target.closest && e.target.closest('.slider')) return;   // стрелки внутри слайдера листают слайды
+  if (prevRoute === 'case') {
+    if (e.key === 'ArrowRight' && currentIndex >= 0) caseView.querySelector('[data-go="next"]')?.click();
+    else if (e.key === 'ArrowLeft' && currentIndex >= 0) caseView.querySelector('[data-go="prev"]')?.click();
+    else if (e.key === 'Escape') caseView.querySelector('#back')?.click();
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    rail.scrollBy({ left: (e.key === 'ArrowRight' ? 1 : -1) * (350 + 12), behavior: 'smooth' });
+  }
+});
+</script>
+</body>
+</html>
